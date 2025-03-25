@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXE | Lista de Tarefas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTYgMkMzLjc4IDIgMiAzLjc4IDIgNkgyMkMyMiAzLjc4IDIwLjIyIDIgMTggMkg2TTYgNFYyMkg5VjEySDE5VjIySDIxVjRIMTJWMjJIMlYxMEgwVjE4SDJWMTBDMiA3Ljc4IDMuNzggNiA2IDZIMThDMjAuMjIgNiAyMiA3Ljc4IDIyIDEwVjIyQzIyIDIyLjU1IDIxLjU1IDIzIDIxIDIzSDEyQzExLjQ1IDIzIDExIDIyLjU1IDExIDIyVjExSDEwVjIyQzkuOTkgMjIuNTUgOS41NSAyMyA5IDIzSDZDNS40NSAyMyA1IDIyLjU1IDUgMjJWMTBDNSA3Ljc4IDYuNzggNiA5IDZWNEg2WiIgZmlsbD0iIzAwMDAwMCIvPjwvc3ZnPg==">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="logo">LUXE</h1>
+            <p class="tagline">GERENCIADOR DE TAREFAS</p>
+        </header>
+        
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Pesquisar tarefas...">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+        
+        <div class="input-container">
+            <input type="text" id="task-input" placeholder="Adicionar nova tarefa..." autofocus>
+            <button class="add-button" id="add-task-btn">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+        
+        <div class="additional-inputs">
+            <div class="date-container">
+                <input type="text" id="due-date" placeholder="Data de vencimento">
+                <i class="fas fa-calendar-alt input-icon"></i>
+            </div>
+            
+            <div class="priority-container">
+                <select id="task-priority">
+                    <option value="">Prioridade</option>
+                    <option value="low">Baixa</option>
+                    <option value="medium">Média</option>
+                    <option value="high">Alta</option>
+                </select>
+                <i class="fas fa-flag input-icon"></i>
+            </div>
+            
+            <div class="category-container">
+                <select id="task-category">
+                    <option value="">Categoria</option>
+                    <option value="trabalho">Trabalho</option>
+                    <option value="pessoal">Pessoal</option>
+                    <option value="estudos">Estudos</option>
+                    <option value="financeiro">Financeiro</option>
+                    <option value="saude">Saúde</option>
+                </select>
+                <i class="fas fa-tag input-icon"></i>
+            </div>
+        </div>
+        
+        <ul class="task-list" id="task-list">
+            <!-- Tasks will be added here -->
+            <li class="empty-state" id="empty-state">
+                Nenhuma tarefa adicionada
+            </li>
+        </ul>
+        
+        <div class="filter-buttons">
+            <button class="filter-button active" data-filter="all">TODAS</button>
+            <button class="filter-button" data-filter="active">PENDENTES</button>
+            <button class="filter-button" data-filter="completed">CONCLUÍDAS</button>
+            <button class="filter-button" data-filter="today">HOJE</button>
+            <button class="filter-button" data-filter="late">ATRASADAS</button>
+        </div>
+        
+        <div class="stats">
+            <span id="tasks-count">0 tarefas</span>
+            <span id="completion-rate">0% concluídas</span>
+        </div>
+        
+        <div class="stats" style="margin-top: 10px;">
+            <button id="clear-completed" class="clear-completed">LIMPAR CONCLUÍDAS</button>
+            <button id="export-button" class="clear-completed">EXPORTAR TAREFAS</button>
+        </div>
+    </div>
+    
+    <!-- Modal de Edição de Tarefa -->
+    <div class="modal" id="edit-task-modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-modal">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 class="modal-title">Editar Tarefa</h2>
+            <form id="edit-task-form">
+                <input type="hidden" id="edit-task-id">
+                
+                <div class="modal-input-group">
+                    <label for="edit-task-text" class="modal-label">Descrição</label>
+                    <input type="text" id="edit-task-text" class="modal-input" required>
+                </div>
+                
+                <div class="modal-input-group">
+                    <label for="edit-task-date" class="modal-label">Data de Vencimento</label>
+                    <input type="text" id="edit-task-date" class="modal-input">
+                </div>
+                
+                <div class="modal-input-group">
+                    <label for="edit-task-priority" class="modal-label">Prioridade</label>
+                    <select id="edit-task-priority" class="modal-select">
+                        <option value="">Sem prioridade</option>
+                        <option value="low">Baixa</option>
+                        <option value="medium">Média</option>
+                        <option value="high">Alta</option>
+                    </select>
+                </div>
+                
+                <div class="modal-input-group">
+                    <label for="edit-task-category" class="modal-label">Categoria</label>
+                    <select id="edit-task-category" class="modal-select">
+                        <option value="">Sem categoria</option>
+                        <option value="trabalho">Trabalho</option>
+                        <option value="pessoal">Pessoal</option>
+                        <option value="estudos">Estudos</option>
+                        <option value="financeiro">Financeiro</option>
+                        <option value="saude">Saúde</option>
+                    </select>
+                </div>
+                
+                <div class="modal-input-group">
+                    <label for="edit-task-notes" class="modal-label">Notas</label>
+                    <textarea id="edit-task-notes" class="modal-textarea"></textarea>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="button" class="modal-button cancel-button" id="cancel-edit">CANCELAR</button>
+                    <button type="submit" class="modal-button save-button">SALVAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2025 LUXE. Todos os direitos reservados para Marcelo Filho.<br>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Configuração do Flatpickr (seletor de datas)
+            const dueDatePicker = flatpickr("#due-date", {
+                dateFormat: "d/m/Y",
+                minDate: "today",
+                locale: {
+                    firstDayOfWeek: 1,
+                    weekdays: {
+                        shorthand: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+                        longhand: ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
+                    },
+                    months: {
+                        shorthand: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                        longhand: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+                    }
+                }
+            });
+            
+            const editDatePicker = flatpickr("#edit-task-date", {
+                dateFormat: "d/m/Y",
+                locale: {
+                    firstDayOfWeek: 1,
+                    weekdays: {
+                        shorthand: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+                        longhand: ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
+                    },
+                    months: {
+                        shorthand: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                        longhand: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+                    }
+                }
+            });
+            
+            // Configuração do Toastr (notificações)
+            toastr.options = {
+                closeButton: false,
+                debug: false,
+                newestOnTop: true,
+                progressBar: true,
+                positionClass: "toast-top-right",
+                preventDuplicates: false,
+                onclick: null,
+                showDuration: "300",
+                hideDuration: "1000",
+                timeOut: "3000",
+                extendedTimeOut: "1000",
+                showEasing: "swing",
+                hideEasing: "linear",
+                showMethod: "fadeIn",
+                hideMethod: "fadeOut"
+            };
+            
+            // Initialize tasks array
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            let currentFilter = 'all';
+            
+            // Initial render
+            renderTasks();
+            updateStats();
+            
+            // Add task
+            $('#add-task-btn').on('click', addTask);
+            $('#task-input').on('keypress', function(e) {
+                if (e.which === 13) {
+                    addTask();
+                }
+            });
+            
+            // Filter tasks
+            $('.filter-button').on('click', function() {
+                $('.filter-button').removeClass('active');
+                $(this).addClass('active');
+                currentFilter = $(this).data('filter');
+                renderTasks();
+            });
+            
+            // Clear completed tasks
+            $('#clear-completed').on('click', function() {
+                if (confirm('Tem certeza que deseja remover todas as tarefas concluídas?')) {
+                    tasks = tasks.filter(task => !task.completed);
+                    saveTasksToLocalStorage();
+                    renderTasks();
+                    updateStats();
+                    toastr.success('Tarefas concluídas removidas com sucesso');
+                }
+            });
+            
+            // Export tasks
+            $('#export-button').on('click', function() {
+                exportTasks();
+            });
+            
+            // Search tasks
+            $('#search-input').on('input', function() {
+                renderTasks();
+            });
+            
+            // Edit task modal
+            $('#close-modal, #cancel-edit').on('click', function() {
+                $('#edit-task-modal').hide();
+            });
+            
+            $('#edit-task-form').on('submit', function(e) {
+                e.preventDefault();
+                saveEditedTask();
+            });
+            
+            // Function to add new task
+            function addTask() {
+                const taskText = $('#task-input').val().trim();
+                if (taskText) {
+                    const dueDate = $('#due-date').val();
+                    const priority = $('#task-priority').val();
+                    const category = $('#task-category').val();
+                    
+                    const newTask = {
+                        id: Date.now(),
+                        text: taskText,
+                        completed: false,
+                        createdAt: new Date().toISOString(),
+                        dueDate: dueDate ? new Date(dueDate.split('/').reverse().join('-')).toISOString() : '',
+                        priority: priority,
+                        category: category,
+                        notes: ''
+                    };
+                    
+                    tasks.unshift(newTask);
+                    saveTasksToLocalStorage();
+                    renderTasks();
+                    updateStats();
+                    
+                    // Clear input
+                    $('#task-input').val('').focus();
+                    $('#due-date').val('');
+                    $('#task-priority').val('');
+                    $('#task-category').val('');
+                    
+                    toastr.success('Tarefa adicionada com sucesso');
+                }
+            }
+            
+            // Function to toggle task completion
+            function toggleTaskCompletion(id) {
+                tasks = tasks.map(task => {
+                    if (task.id === id) {
+                        const updatedTask = { ...task, completed: !task.completed };
+                        if (updatedTask.completed) {
+                            updatedTask.completedAt = new Date().toISOString();
+                        } else {
+                            updatedTask.completedAt = null;
+                        }
+                        return updatedTask;
+                    }
+                    return task;
+                });
+                
+                saveTasksToLocalStorage();
+                renderTasks();
+                updateStats();
+                
+                const task = tasks.find(t => t.id === id);
+                if (task.completed) {
+                    toastr.success('Tarefa concluída');
+                }
+            }
+            
+            // Function to delete task
+            function deleteTask(id) {
+                if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
+                    tasks = tasks.filter(task => task.id !== id);
+                    saveTasksToLocalStorage();
+                    renderTasks();
+                    updateStats();
+                    toastr.success('Tarefa excluída com sucesso');
+                }
+            }
+            
+           // Function to open edit task modal
+            function openEditTaskModal(id) {
+                const task = tasks.find(task => task.id === id);
+                if (task) {
+                    $('#edit-task-id').val(task.id);
+                    $('#edit-task-text').val(task.text);
+                    
+                    if (task.dueDate) {
+                        const dueDate = new Date(task.dueDate);
+                        const formattedDate = `${dueDate.getDate().toString().padStart(2, '0')}/${(dueDate.getMonth() + 1).toString().padStart(2, '0')}/${dueDate.getFullYear()}`;
+                        editDatePicker.setDate(formattedDate);
+                    } else {
+                        editDatePicker.clear();
+                    }
+                    
+                    $('#edit-task-priority').val(task.priority || '');
+                    $('#edit-task-category').val(task.category || '');
+                    $('#edit-task-notes').val(task.notes || '');
+                    
+                    $('#edit-task-modal').css('display', 'flex');
+                    $('#edit-task-text').focus();
+                }
+            }
+            
+            // Function to save edited task
+            function saveEditedTask() {
+                const id = parseInt($('#edit-task-id').val());
+                const text = $('#edit-task-text').val().trim();
+                const dateStr = $('#edit-task-date').val();
+                const priority = $('#edit-task-priority').val();
+                const category = $('#edit-task-category').val();
+                const notes = $('#edit-task-notes').val().trim();
+                
+                if (text) {
+                    tasks = tasks.map(task => {
+                        if (task.id === id) {
+                            return {
+                                ...task,
+                                text: text,
+                                dueDate: dateStr ? new Date(dateStr.split('/').reverse().join('-')).toISOString() : '',
+                                priority: priority,
+                                category: category,
+                                notes: notes,
+                                updatedAt: new Date().toISOString()
+                            };
+                        }
+                        return task;
+                    });
+                    
+                    saveTasksToLocalStorage();
+                    renderTasks();
+                    $('#edit-task-modal').hide();
+                    toastr.success('Tarefa atualizada com sucesso');
+                }
+            }
+            
+            // Function to export tasks
+            function exportTasks() {
+                const taskData = JSON.stringify(tasks, null, 2);
+                const blob = new Blob([taskData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `luxe-tarefas-${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                toastr.success('Tarefas exportadas com sucesso');
+            }
+            
+            // Function to render tasks based on current filter and search
+            function renderTasks() {
+                const searchTerm = $('#search-input').val().trim().toLowerCase();
+                
+                let filteredTasks = tasks;
+                
+                // Apply search filter
+                if (searchTerm) {
+                    filteredTasks = filteredTasks.filter(task => 
+                        task.text.toLowerCase().includes(searchTerm) || 
+                        (task.category && task.category.toLowerCase().includes(searchTerm)) ||
+                        (task.notes && task.notes.toLowerCase().includes(searchTerm))
+                    );
+                }
+                
+                // Apply status/date filter
+                switch (currentFilter) {
+                    case 'active':
+                        filteredTasks = filteredTasks.filter(task => !task.completed);
+                        break;
+                    case 'completed':
+                        filteredTasks = filteredTasks.filter(task => task.completed);
+                        break;
+                    case 'today':
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const tomorrow = new Date(today);
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        
+                        filteredTasks = filteredTasks.filter(task => {
+                            if (!task.dueDate) return false;
+                            const dueDate = new Date(task.dueDate);
+                            dueDate.setHours(0, 0, 0, 0);
+                            return dueDate.getTime() === today.getTime();
+                        });
+                        break;
+                    case 'late':
+                        const now = new Date();
+                        now.setHours(0, 0, 0, 0);
+                        
+                        filteredTasks = filteredTasks.filter(task => {
+                            if (!task.dueDate || task.completed) return false;
+                            const dueDate = new Date(task.dueDate);
+                            dueDate.setHours(0, 0, 0, 0);
+                            return dueDate < now;
+                        });
+                        break;
+                }
+                
+                // Sort tasks: first by completion status, then by due date, then by priority
+                filteredTasks.sort((a, b) => {
+                    // First by completion status
+                    if (a.completed !== b.completed) {
+                        return a.completed ? 1 : -1;
+                    }
+                    
+                    // Then by due date (if both have due dates)
+                    if (a.dueDate && b.dueDate) {
+                        return new Date(a.dueDate) - new Date(b.dueDate);
+                    }
+                    
+                    // Tasks with due dates come before those without
+                    if (a.dueDate && !b.dueDate) return -1;
+                    if (!a.dueDate && b.dueDate) return 1;
+                    
+                    // Then by priority
+                    const priorityValues = { high: 1, medium: 2, low: 3, '': 4 };
+                    if (a.priority !== b.priority) {
+                        return priorityValues[a.priority || ''] - priorityValues[b.priority || ''];
+                    }
+                    
+                    // Finally by creation date (newest first)
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                });
+                
+                if (filteredTasks.length === 0) {
+                    let emptyMessage = 'Nenhuma tarefa ';
+                    switch (currentFilter) {
+                        case 'completed': emptyMessage += 'concluída'; break;
+                        case 'active': emptyMessage += 'pendente'; break;
+                        case 'today': emptyMessage += 'para hoje'; break;
+                        case 'late': emptyMessage += 'atrasada'; break;
+                        default: emptyMessage += 'encontrada';
+                    }
+                    
+                    if (searchTerm) {
+                        emptyMessage += ` para "${searchTerm}"`;
+                    }
+                    
+                    $('#task-list').html(`<li class="empty-state">${emptyMessage}</li>`);
+                    return;
+                }
+                
+                // Build task elements
+                const taskElements = filteredTasks.map(task => {
+                    // Check if task is late
+                    let isLate = false;
+                    if (task.dueDate && !task.completed) {
+                        const now = new Date();
+                        now.setHours(0, 0, 0, 0);
+                        const dueDate = new Date(task.dueDate);
+                        dueDate.setHours(0, 0, 0, 0);
+                        isLate = dueDate < now;
+                    }
+                    
+                    // Format due date
+                    let formattedDate = '';
+                    if (task.dueDate) {
+                        const dueDate = new Date(task.dueDate);
+                        formattedDate = `${dueDate.getDate().toString().padStart(2, '0')}/${(dueDate.getMonth() + 1).toString().padStart(2, '0')}/${dueDate.getFullYear()}`;
+                        
+                        // Check if it's today
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const dueDateNoTime = new Date(dueDate);
+                        dueDateNoTime.setHours(0, 0, 0, 0);
+                        
+                        if (dueDateNoTime.getTime() === today.getTime()) {
+                            formattedDate = 'Hoje';
+                        } else if (dueDateNoTime.getTime() === today.getTime() + 86400000) {
+                            formattedDate = 'Amanhã';
+                        }
+                    }
+                    
+                    // Get priority indicator
+                    let priorityHTML = '';
+                    if (task.priority) {
+                        priorityHTML = `<span class="task-priority"><span class="task-priority-indicator priority-${task.priority}"></span>${task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}</span>`;
+                    }
+                    
+                    // Get category
+                    let categoryHTML = '';
+                    if (task.category) {
+                        const categoryName = {
+                            'trabalho': 'Trabalho',
+                            'pessoal': 'Pessoal',
+                            'estudos': 'Estudos',
+                            'financeiro': 'Financeiro',
+                            'saude': 'Saúde'
+                        }[task.category] || task.category;
+                        categoryHTML = `<span class="task-category"><i class="fas fa-tag"></i>${categoryName}</span>`;
+                    }
+                    
+                    // Check if task has notes
+                    const hasNotes = task.notes && task.notes.trim() !== '';
+                    
+                    return `
+                        <li class="task-item ${task.completed ? 'completed' : ''} ${isLate ? 'late' : ''}" data-id="${task.id}">
+                            <input type="checkbox" class="checkbox" ${task.completed ? 'checked' : ''}>
+                            <div class="task-content">
+                                <div class="task-text">${task.text}</div>
+                                <div class="task-meta">
+                                    ${formattedDate ? `<span class="task-date"><i class="fas fa-calendar-alt"></i>${formattedDate}</span>` : ''}
+                                    ${categoryHTML}
+                                    ${priorityHTML}
+                                    ${hasNotes ? `<span class="task-notes-indicator"><i class="fas fa-sticky-note"></i></span>` : ''}
+                                </div>
+                            </div>
+                            <div class="task-actions">
+                                <button class="action-button edit-btn" title="Editar">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <button class="action-button delete-btn" title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </li>
+                    `;
+                }).join('');
+                
+                $('#task-list').html(taskElements);
+                
+                // Add event listeners to dynamically created elements
+                $('.checkbox').on('change', function() {
+                    const taskId = Number($(this).closest('.task-item').data('id'));
+                    toggleTaskCompletion(taskId);
+                });
+                
+                $('.delete-btn').on('click', function() {
+                    const taskId = Number($(this).closest('.task-item').data('id'));
+                    deleteTask(taskId);
+                });
+                
+                $('.edit-btn').on('click', function() {
+                    const taskId = Number($(this).closest('.task-item').data('id'));
+                    openEditTaskModal(taskId);
+                });
+            }
+            
+            // Function to update stats
+            function updateStats() {
+                const totalTasks = tasks.length;
+                const completedTasks = tasks.filter(task => task.completed).length;
+                const pendingTasks = totalTasks - completedTasks;
+                const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                
+                $('#tasks-count').text(
+                    totalTasks === 0 ? 'Nenhuma tarefa' : 
+                    totalTasks === 1 ? '1 tarefa' : 
+                    `${totalTasks} tarefas`
+                );
+                
+                $('#completion-rate').text(`${completionRate}% concluídas`);
+                
+                // Check for overdue tasks and show notification
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+                
+                const overdueTasks = tasks.filter(task => {
+                    if (!task.dueDate || task.completed) return false;
+                    const dueDate = new Date(task.dueDate);
+                    dueDate.setHours(0, 0, 0, 0);
+                    return dueDate < now;
+                });
+                
+                if (overdueTasks.length > 0 && currentFilter !== 'late') {
+                    const tasksWord = overdueTasks.length === 1 ? 'tarefa atrasada' : 'tarefas atrasadas';
+                    toastr.warning(`Você tem ${overdueTasks.length} ${tasksWord}`, 'Atenção');
+                }
+            }
+            
+            // Function to save tasks to localStorage
+            function saveTasksToLocalStorage() {
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            }
+            
+            // Check for today's tasks and show notification on startup
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            
+            const todayTasks = tasks.filter(task => {
+                if (!task.dueDate || task.completed) return false;
+                const dueDate = new Date(task.dueDate);
+                dueDate.setHours(0, 0, 0, 0);
+                return dueDate.getTime() === now.getTime();
+            });
+            
+            if (todayTasks.length > 0) {
+                const tasksWord = todayTasks.length === 1 ? 'tarefa' : 'tarefas';
+                toastr.info(`Você tem ${todayTasks.length} ${tasksWord} para hoje`);
+            }
+        });
+    </script>
+</body>
+</html>
